@@ -33,12 +33,12 @@ class Mysql
 			}
 			if(defined('TIME_ZONE'))
 			{
-				$sql = "SET time_zone = '".TIME_ZONE."'";
+				$sql = "SET time_zone = '+8:00'";
 				$this->query($sql);
 			}
 			if(defined('MYSQL_SET_NAMES'))
 			{
-				$sql = "SET NAMES ".MYSQL_SET_NAMES;
+				$sql = "SET NAMES utf8";
 				$this->query($sql);
 			}
 		}

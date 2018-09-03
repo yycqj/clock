@@ -1,5 +1,7 @@
 <?php
 require_once './class.Mysql.php';
+header("content-type:text/html;charset=utf-8");
+error_reporting(E_ALL & ~E_NOTICE);
 class MysqlExt extends Mysql
 {
 	function getCreateTableSql($_table_name)
@@ -186,6 +188,59 @@ class MysqlExt extends Mysql
 		$this->query($sql);
 	}
 	
+	function getTimeByDate ($date, $user_table = TABLENAME , $status = ""){
+		//返回对应日期时间戳
+		$sql = "SELECT clock_date FROM {$user_table} WHERE clock_day = '$date' AND clock_status = '{$status}'";
+		$date_in = $this->getFirstRow($sql);
+		return $date_in = $date_in['clock_date'];
+	}
+	
+	function getWorktimeByDate ($date , $user_table = TABLENAME , $status = "str"){
+		//获取当天打卡上班时间戳
+		$sql = "SELECT clock_date FROM {$user_table} WHERE clock_day='$date' AND clock_status='in'";
+		$date_in = $this->getFirstRow($sql);
+		$date_in = $date_in['clock_date'];
+		//获取当天打卡下班时间戳
+		$sql = "SELECT clock_date FROM {$user_table} WHERE clock_day='$date' AND clock_status='out'";
+		$date_out = $this->getFirstRow($sql);
+		$date_out = $date_out['clock_date'];
+// 		var_dump($date_in);
+// 		echo "<br>";
+// 		var_dump($date_out);
+		$work_hour = floor(($date_out - $date_in)/3600);
+		$work_min = floor(($date_out - $date_in)/60);
+		
+		switch ($status){
+			case "str" :
+				$work_min = $work_min - $work_hour * 60;
+				return $string = $work_hour."时".$work_min."分";
+			case "min" :
+				return $work_min;
+		}
+		
+	}
+	
+	/**
+	 * 返回一个星期几，clock_status，data的多维数组
+	 * @param unknown $week
+	 * @param string $user_table
+	 * @return Ambigous <multitype:string , multitype:, multitype:multitype: >
+	 */
+	function getWeekResult ($week , $user_table = TABLENAME) {
+		$week_result = array();
+		for($i=0;$i<7;$i++){
+			$week_result[$i] = '';
+		}
+		$sql = "SELECT clock_status,clock_date,clock_day FROM {$user_table} WHERE clock_week='{$week}'";
+		$result = $this->getRows($sql);
+		foreach ($result as $k => $v){
+			$week_num = 0;
+			$week_num = date('w',strtotime($v['clock_day']));
+			$v['clock_status'] == "in" ? $week_result[$week_num]['in'] = $v : $week_result[$week_num]['out'] = $v;
+		}
+// 		var_dump($week_result);
+		return $week_result;
+	}
 }
 ?>
 
